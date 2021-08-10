@@ -71,6 +71,10 @@
     <None Include="Data\dbo.Artist.Table.sql" />
     <Build Include="Tables\dbo.AssessmentSteps.sql" />
     <Build Include="Stored Procedures\GetAssessmentSteps.sql" />
+    <Build Include="Stored Procedures\GetArtistDetails.sql" />
+    <Build Include="Stored Procedures\GetAllArtists.sql" />
+    <Build Include="Stored Procedures\GetArtistDetailsByName.sql" />
+    <Build Include="Stored Procedures\AddArtist.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="Assessment.refactorlog" />
@@ -80,5 +84,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\dbo.AssessmentSteps.Table.sql" />
+    <None Include="MultiTracksDB.publish.xml" />
   </ItemGroup>
 </Project>
