@@ -39,6 +39,7 @@ namespace MTDataAccess
         /// <returns>An object that contains a new artist Id</returns>
         Artist AddArtist(Artist artist);
         Album GetAlbumById(int albumId);
+        IEnumerable<Album> GetAlbumsByArtistId(int artistId);
         Song GetSongById(int songId);
     }
 }

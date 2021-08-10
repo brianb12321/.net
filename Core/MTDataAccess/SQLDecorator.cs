@@ -16,7 +16,7 @@ namespace MTDataAccess
     /// </summary>
     public class SQLDecorator : IDataAccess
     {
-        private SQL sql;
+        private readonly SQL sql;
 
         public SQLDecorator(SQL sql)
         {
@@ -38,7 +38,7 @@ namespace MTDataAccess
 
         public IEnumerable<Artist> GetArtists()
         {
-            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetAllArtists"))
+            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetAllArtists", true))
             {
                 if (reader.HasRows)
                 {
@@ -54,7 +54,7 @@ namespace MTDataAccess
             //Setup stored procedure parameters.
             SqlParameter artistIdParameter = new SqlParameter("@artistId", SqlDbType.Int) {Value = artistId};
             sql.Parameters.Add(artistIdParameter);
-            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetArtistDetails"))
+            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetArtistDetails", true))
             {
                 if (reader.HasRows)
                 {
@@ -71,7 +71,7 @@ namespace MTDataAccess
             SqlParameter artistIdParameter = new SqlParameter("@artistName", SqlDbType.VarChar) {Value = artistName};
             sql.Parameters.Add(artistIdParameter);
             sql.Parameters.Add(new SqlParameter("@exact", SqlDbType.Bit) {Value = exact});
-            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetArtistDetailsByName"))
+            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetArtistDetailsByName", true))
             {
                 if (reader.HasRows)
                 {
@@ -88,7 +88,6 @@ namespace MTDataAccess
             if (artist == null)
                 throw new ArgumentException("You must supply an artist model.", nameof(artist));
 
-            SQL sql = new SQL();
             //Setup parameters
             sql.Parameters.Add(new SqlParameter("@dateCreation", SqlDbType.SmallDateTime) {Value = artist.DateCreation ?? DateTime.Now});
             sql.Parameters.Add(new SqlParameter("@title", SqlDbType.VarChar) {Value = artist.Title});
@@ -98,7 +97,7 @@ namespace MTDataAccess
 
             sql.OpenConnection();
             sql.BeginTransaction();
-            var reader = sql.ExecuteStoredProcedureDataReader("AddArtist");
+            var reader = sql.ExecuteStoredProcedureDataReader("AddArtist", true);
             //The stored-procedure will return the added row.
             Artist result = null;
             if (reader.HasRows)
@@ -112,9 +111,34 @@ namespace MTDataAccess
             return result ?? throw new Exception("Artist could not be returned from server.");
         }
 
+        private Album populateAlbumFromDataRow(DataRow row)
+        {
+            return new Album()
+            {
+                AlbumId = (int) row["albumId"],
+                ArtistId = (int) row["artistId"],
+                DateCreation = (DateTime) row["dateCreation"],
+                ImageUrl = new Uri(row["imageURL"].ToString()),
+                Title = row["title"].ToString(),
+                Year = (int) row["year"]
+            };
+        }
+
         public Album GetAlbumById(int albumId)
         {
             throw new NotImplementedException();
+        }
+
+        public IEnumerable<Album> GetAlbumsByArtistId(int artistId)
+        {
+            sql.Parameters.Add(new SqlParameter("@artistId", SqlDbType.Int) {Value = artistId});
+            using (DataTable result = sql.ExecuteStoredProcedureDT("GetAlbumsByArtistId", true))
+            {
+                foreach (DataRow row in result.Rows)
+                {
+                    yield return populateAlbumFromDataRow(row);
+                }
+            }
         }
 
         public Song GetSongById(int songId)

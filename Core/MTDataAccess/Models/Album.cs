@@ -7,7 +7,7 @@ namespace MTDataAccess.Models
         public int AlbumId { get; set; }
         public DateTime DateCreation { get; set; }
         public string Title { get; set; }
-        public Artist Artist { get; set; }
+        public int ArtistId { get; set; }
         public Uri ImageUrl { get; set; }
         public int Year { get; set; }
     }
