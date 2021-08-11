@@ -126,7 +126,14 @@ namespace MTDataAccess
 
         public Album GetAlbumById(int albumId)
         {
-            throw new NotImplementedException();
+            sql.Parameters.Add(new SqlParameter("@albumId", SqlDbType.Int) {Value = albumId});
+            using (DataTable table = sql.ExecuteStoredProcedureDT("GetAlbumById", true))
+            {
+                if (table.Rows.Count == 0)
+                    return null;
+
+                return populateAlbumFromDataRow(table.Rows[0]);
+            }
         }
 
         public IEnumerable<Album> GetAlbumsByArtistId(int artistId)
@@ -141,9 +148,50 @@ namespace MTDataAccess
             }
         }
 
+        public Song populateSongFromDataRow(DataRow row, bool lazy = false)
+        {
+            Song song = new Song()
+            {
+                SongId = (int) row["songId"],
+                Bpm = (decimal) row["bpm"],
+                Title = row["title"].ToString(),
+                DateCreation = (DateTime) row["dateCreation"],
+                TimeSignature = row["timeSignature"].ToString(),
+                Chart = (bool) row["chart"],
+                MultiTracks = (bool) row["multitracks"],
+                CustomMix = (bool) row["customMix"],
+                RehearsalMix = (bool) row["rehearsalMix"],
+                Patches = (bool) row["patches"],
+                SongSpecificPatches = (bool) row["songSpecificPatches"],
+                ProPresenter = (bool) row["proPresenter"],
+                AlbumId = (int)row["albumID"],
+                ArtistId = (int)row["artistID"]
+            };
+            if (!lazy)
+            {
+                Artist artist = GetArtistById(song.ArtistId);
+                Album album = GetAlbumById(song.AlbumId);
+                song.Artist = artist;
+                song.Album = album;
+            }
+
+            return song;
+        }
         public Song GetSongById(int songId)
         {
             throw new NotImplementedException();
+        }
+
+        public IEnumerable<Song> GetSongsByArtistId(int artistId, bool lazy = false)
+        {
+            sql.Parameters.Add(new SqlParameter("@artistId", SqlDbType.Int) {Value = artistId});
+            using (DataTable table = sql.ExecuteStoredProcedureDT("GetSongsByArtistId", true))
+            {
+                foreach (DataRow row in table.Rows)
+                {
+                    yield return populateSongFromDataRow(row, lazy);
+                }
+            }
         }
     }
 }

@@ -40,6 +40,7 @@ namespace MTDataAccess
         Artist AddArtist(Artist artist);
         Album GetAlbumById(int albumId);
         IEnumerable<Album> GetAlbumsByArtistId(int artistId);
+        IEnumerable<Song> GetSongsByArtistId(int artistId, bool lazy = false);
         Song GetSongById(int songId);
     }
 }

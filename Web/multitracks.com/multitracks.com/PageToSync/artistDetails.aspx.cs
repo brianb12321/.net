@@ -16,6 +16,7 @@ using MTDataAccess.Models;
 public partial class artistDetails : System.Web.UI.Page
 {
     public List<Album> Albums { get; set; }
+    public List<Song> DisplayedSongs { get; set; }
     public string ArtistName { get; set; }
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -29,6 +30,7 @@ public partial class artistDetails : System.Web.UI.Page
                 Artist artist = dataAccess.GetArtistById(artistId);
                 ArtistName = artist.Title;
                 setupBanner(artist);
+                setupDisplayedSongsList(artist, dataAccess);
                 setupAlbumsList(artist, dataAccess);
                 setupBiography(artist);
             }
@@ -55,6 +57,15 @@ public partial class artistDetails : System.Web.UI.Page
         Albums.AddRange(albums);
         albumRepeater.DataSource = albums;
         albumRepeater.DataBind();
+    }
+
+    private void setupDisplayedSongsList(Artist artist, IDataAccess dataAccess)
+    {
+        IEnumerable<Song> songs = dataAccess.GetSongsByArtistId(artist.ArtistId);
+        DisplayedSongs = new List<Song>();
+        DisplayedSongs.AddRange(songs.Take(10));
+        songListRepeater.DataSource = DisplayedSongs;
+        songListRepeater.DataBind();
     }
 
     private void setupBiography(Artist artist)

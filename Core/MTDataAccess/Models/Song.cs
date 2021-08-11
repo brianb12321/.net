@@ -6,8 +6,10 @@ namespace MTDataAccess.Models
     {
         public int SongId { get; set; }
         public DateTime DateCreation { get; set; }
-        public Album Album { get; set; }
-        public Artist Artist { get; set; }
+        public Album Album { get; internal set; }
+        public int AlbumId { get; set; }
+        public Artist Artist { get; internal set; }
+        public int ArtistId { get; set; }
         public string Title { get; set; }
         public decimal Bpm { get; set; }
         public string TimeSignature { get; set; }

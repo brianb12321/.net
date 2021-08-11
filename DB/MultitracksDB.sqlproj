@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -9,8 +9,7 @@
     <ProjectGuid>{c0455f77-4c86-44ab-a96f-fd433ba1c3bb}</ProjectGuid>
     <DSP>Microsoft.Data.Tools.Schema.Sql.Sql130DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
-    <RootPath>
-    </RootPath>
+    <RootPath />
     <RootNamespace>Assessment</RootNamespace>
     <AssemblyName>Assessment</AssemblyName>
     <ModelCollation>1033, CI</ModelCollation>
@@ -50,7 +49,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
-    <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
     <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
     <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
   </PropertyGroup>
@@ -76,6 +74,8 @@
     <Build Include="Stored Procedures\GetArtistDetailsByName.sql" />
     <Build Include="Stored Procedures\AddArtist.sql" />
     <Build Include="Stored Procedures\GetAlbumsByArtistId.sql" />
+    <Build Include="Stored Procedures\GetSongsByArtistId.sql" />
+    <Build Include="Stored Procedures\GetAlbumById.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="Assessment.refactorlog" />

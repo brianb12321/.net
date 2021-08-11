@@ -2,5 +2,5 @@
 	@artistId INT
 AS
 	SELECT Album.*
-	FROM Album INNER JOIN Artist ON Album.artistID = Artist.artistID
+	FROM Album
 	WHERE Album.artistID = @artistID
