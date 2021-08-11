@@ -50,7 +50,7 @@
 							</div><!-- /.discovery-select -->
 
 							<ul id="playlist" class="song-list mod-new mod-menu">
-								<asp:Repeater runat="server" Id="songListRepeater">
+								<asp:Repeater runat="server" ID="songListRepeater">
 									<ItemTemplate>
 										<li class="song-list--item media-player--row">
 
@@ -101,7 +101,7 @@
 
 								<div class="discovery--grid-holder">
                                     <div class="ly-grid ly-grid-cranberries">
-										<asp:Repeater runat="server" Id="albumRepeater">
+										<asp:Repeater runat="server" ID="albumRepeater">
 											<ItemTemplate>
                                                 <div class="media-item">
                                                     <a class="media-item--img--link" href="#" tabindex="0">

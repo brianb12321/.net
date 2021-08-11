@@ -11,5 +11,7 @@ namespace MTDataAccess.Models
         public string Biography { get; set; }
         public Uri ImageUrl { get; set; }
         public Uri HeroUrl { get; set; }
+        public Album[] Albums { get; internal set; }
+        public Song[] Songs { get; internal set; }
     }
 }

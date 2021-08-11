@@ -23,43 +23,66 @@ namespace MTDataAccess
             this.sql = sql;
         }
 
-        private Artist populateArtistFromDataReader(SqlDataReader reader)
+        private Artist populateArtistFromDataRow(DataRow row, bool lazy, DataTable albumTable = null, DataTable songTable = null, DataTable artistTable = null)
         {
-            return new Artist()
+            Artist artist = new Artist()
             {
-                ArtistId = (int)reader["artistId"],
-                Biography = reader["biography"].ToString(),
-                DateCreation = (DateTime)reader["dateCreation"],
-                HeroUrl = new Uri(reader["heroURL"].ToString()),
-                ImageUrl = new Uri(reader["ImageURL"].ToString()),
-                Title = reader["title"].ToString()
+                ArtistId = (int)row["artistID"],
+                Biography = row["biography"].ToString(),
+                DateCreation = (DateTime)row["dateCreation"],
+                HeroUrl = new Uri(row["heroURL"].ToString()),
+                ImageUrl = new Uri(row["ImageURL"].ToString()),
+                Title = row["title"].ToString()
             };
+            if (!lazy)
+            {
+                List<Album> albums = new List<Album>(albumTable.RowCount());
+                foreach (DataRow albumRow in albumTable.Rows)
+                {
+                    albums.Add(populateAlbumFromDataRow(albumRow));
+                }
+
+                List<Song> songs = new List<Song>(songTable.RowCount());
+                foreach (DataRow songRow in songTable.Rows)
+                {
+                    songs.Add(populateSongFromDataRow(songRow, false, albumTable, artistTable));
+                }
+                artist.Albums = albums.ToArray();
+                artist.Songs = songs.ToArray();
+            }
+
+            return artist;
         }
 
         public IEnumerable<Artist> GetArtists()
         {
-            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetAllArtists", true))
+            using (DataTable table = sql.ExecuteStoredProcedureDT("GetAllArtists", true))
             {
-                if (reader.HasRows)
+                foreach (DataRow row in table.Rows)
                 {
-                    while (reader.Read())
-                    {
-                        yield return populateArtistFromDataReader(reader);
-                    }
+                    yield return populateArtistFromDataRow(row, false);
                 }
             }
         }
-        public Artist GetArtistById(int artistId)
+        public Artist GetArtistById(int artistId, bool lazy = false)
         {
             //Setup stored procedure parameters.
             SqlParameter artistIdParameter = new SqlParameter("@artistId", SqlDbType.Int) {Value = artistId};
             sql.Parameters.Add(artistIdParameter);
-            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetArtistDetails", true))
+            if (!lazy)
             {
-                if (reader.HasRows)
+                sql.Parameters.Add(new SqlParameter("@includeAlbum", SqlDbType.Bit) {Value = true});
+                sql.Parameters.Add(new SqlParameter("@includeSong", SqlDbType.Bit) {Value = true});
+            }
+            using (DataSet set = sql.ExecuteStoredProcedureDS("GetArtistDetails", true))
+            {
+                if (set.Tables[0].Rows.Count > 0)
                 {
-                    reader.Read();
-                    return populateArtistFromDataReader(reader);
+                    if (!lazy)
+                    {
+                        return populateArtistFromDataRow(set.Tables[0].Rows[0], false, set.Tables[1], set.Tables[2], set.Tables[0]);
+                    }
+                    return populateArtistFromDataRow(set.Tables[0].Rows[0], true);
                 }
             }
             return null;
@@ -71,19 +94,16 @@ namespace MTDataAccess
             SqlParameter artistIdParameter = new SqlParameter("@artistName", SqlDbType.VarChar) {Value = artistName};
             sql.Parameters.Add(artistIdParameter);
             sql.Parameters.Add(new SqlParameter("@exact", SqlDbType.Bit) {Value = exact});
-            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetArtistDetailsByName", true))
+            using (DataTable table = sql.ExecuteStoredProcedureDT("GetArtistDetailsByName", true))
             {
-                if (reader.HasRows)
+                foreach (DataRow row in table.Rows)
                 {
-                    while (reader.Read())
-                    {
-                        yield return populateArtistFromDataReader(reader);
-                    }
+                    yield return populateArtistFromDataRow(row, true);
                 }
             }
         }
 
-        public Artist AddArtist(Artist artist)
+        public Artist AddArtist(Artist artist, bool lazy = false)
         {
             if (artist == null)
                 throw new ArgumentException("You must supply an artist model.", nameof(artist));
@@ -97,15 +117,15 @@ namespace MTDataAccess
 
             sql.OpenConnection();
             sql.BeginTransaction();
-            var reader = sql.ExecuteStoredProcedureDataReader("AddArtist", true);
+            var row = sql.ExecuteStoredProcedureDT("AddArtist", true);
             //The stored-procedure will return the added row.
             Artist result = null;
-            if (reader.HasRows)
+
+            if (row.Rows.Count > 0)
             {
-                reader.Read();
-                result = populateArtistFromDataReader(reader);
+                result = populateArtistFromDataRow(row.Rows[0], lazy);
             }
-            reader.Close();
+            row.Dispose();
             sql.Commit();
             sql.CloseConnection();
             return result ?? throw new Exception("Artist could not be returned from server.");
@@ -148,7 +168,7 @@ namespace MTDataAccess
             }
         }
 
-        public Song populateSongFromDataRow(DataRow row, bool lazy = false)
+        public Song populateSongFromDataRow(DataRow row, bool lazy = false, DataTable albumTable = null, DataTable artistTable = null, DataTable songTable = null)
         {
             Song song = new Song()
             {
@@ -169,10 +189,14 @@ namespace MTDataAccess
             };
             if (!lazy)
             {
-                Artist artist = GetArtistById(song.ArtistId);
-                Album album = GetAlbumById(song.AlbumId);
-                song.Artist = artist;
-                song.Album = album;
+                foreach (DataRow albumRow in albumTable.Rows)
+                {
+                    if ((int) albumRow["albumID"] == song.AlbumId)
+                    {
+                        song.Album = populateAlbumFromDataRow(albumRow);
+                    }
+                }
+                song.Artist = populateArtistFromDataRow(artistTable.Rows[0], true, albumTable, songTable);
             }
 
             return song;
@@ -185,10 +209,19 @@ namespace MTDataAccess
         public IEnumerable<Song> GetSongsByArtistId(int artistId, bool lazy = false)
         {
             sql.Parameters.Add(new SqlParameter("@artistId", SqlDbType.Int) {Value = artistId});
-            using (DataTable table = sql.ExecuteStoredProcedureDT("GetSongsByArtistId", true))
+            if (!lazy)
             {
-                foreach (DataRow row in table.Rows)
+                sql.Parameters.Add(new SqlParameter("@includeArtist", SqlDbType.Bit) {Value = true});
+                sql.Parameters.Add(new SqlParameter("@includeAlbum", SqlDbType.Bit) {Value = true});
+            }
+            using (DataSet set = sql.ExecuteStoredProcedureDS("GetSongsByArtistId", true))
+            {
+                foreach (DataRow row in set.Tables[0].Rows)
                 {
+                    if (!lazy)
+                    {
+                        yield return populateSongFromDataRow(row, lazy, set.Tables[2], set.Tables[1], set.Tables[0]);
+                    }
                     yield return populateSongFromDataRow(row, lazy);
                 }
             }

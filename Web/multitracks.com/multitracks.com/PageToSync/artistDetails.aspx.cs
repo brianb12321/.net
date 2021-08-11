@@ -30,8 +30,8 @@ public partial class artistDetails : System.Web.UI.Page
                 Artist artist = dataAccess.GetArtistById(artistId);
                 ArtistName = artist.Title;
                 setupBanner(artist);
-                setupDisplayedSongsList(artist, dataAccess);
-                setupAlbumsList(artist, dataAccess);
+                setupDisplayedSongsList(artist);
+                setupAlbumsList(artist);
                 setupBiography(artist);
             }
             else
@@ -50,21 +50,15 @@ public partial class artistDetails : System.Web.UI.Page
         banner.DetailsName = artist.Title;
     }
 
-    private void setupAlbumsList(Artist artist, IDataAccess dataAccess)
+    private void setupAlbumsList(Artist artist)
     {
-        IEnumerable<Album> albums = dataAccess.GetAlbumsByArtistId(artist.ArtistId);
-        Albums = new List<Album>();
-        Albums.AddRange(albums);
-        albumRepeater.DataSource = albums;
+        albumRepeater.DataSource = artist.Albums;
         albumRepeater.DataBind();
     }
 
-    private void setupDisplayedSongsList(Artist artist, IDataAccess dataAccess)
+    private void setupDisplayedSongsList(Artist artist)
     {
-        IEnumerable<Song> songs = dataAccess.GetSongsByArtistId(artist.ArtistId);
-        DisplayedSongs = new List<Song>();
-        DisplayedSongs.AddRange(songs.Take(10));
-        songListRepeater.DataSource = DisplayedSongs;
+        songListRepeater.DataSource = artist.Songs;
         songListRepeater.DataBind();
     }
 
