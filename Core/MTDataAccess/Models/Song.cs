@@ -13,6 +13,8 @@ namespace MTDataAccess.Models
         public string Title { get; set; }
         public decimal Bpm { get; set; }
         public string TimeSignature { get; set; }
+
+        public TimeSignature TimeSignatureObject => Models.TimeSignature.ParseEncodedNumber(uint.Parse(TimeSignature));
         public bool MultiTracks { get; set; }
         public bool CustomMix { get; set; }
         public bool Chart { get; set; }
