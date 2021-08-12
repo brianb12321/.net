@@ -38,6 +38,7 @@ namespace MTDataAccess.Models
         {
             //TODO: Figure out algorithm used by current song data-set.
 
+            if (BeatsPerMeasure == 2 && BeatSubdivision == 4) return 1;
             if (BeatsPerMeasure == 4 && BeatSubdivision == 4) return 3;
             if (BeatsPerMeasure == 6 && BeatSubdivision == 8) return 13;
             if (BeatsPerMeasure == 12 && BeatSubdivision == 8) return 18;
@@ -48,6 +49,7 @@ namespace MTDataAccess.Models
         {
             switch (encodedNum)
             {
+                case 1: return new TimeSignature(2, 4);
                 case 3: return new TimeSignature(4, 4);
                 case 13: return new TimeSignature(6, 8);
                 case 18: return new TimeSignature(12, 8);

@@ -39,12 +39,12 @@ namespace MTDataAccess
         /// Adds an artist to the Artist table. ArtistId will be ignored
         /// </summary>
         /// <param name="artist">The artist object to save</param>
-        /// <param name="lazy">Determines whether to retrieve data from other tables</param>
         /// <returns>An object that contains a new artist Id</returns>
-        Artist AddArtist(Artist artist, bool lazy = false);
+        Artist AddArtist(Artist artist);
         Album GetAlbumById(int albumId);
         IEnumerable<Album> GetAlbumsByArtistId(int artistId);
         IEnumerable<Song> GetSongsByArtistId(int artistId, bool lazy = false);
+        IEnumerable<Song> GetAllSongs(uint pageNumber = 1, uint pageSize = uint.MaxValue);
         Song GetSongById(int songId);
     }
 }

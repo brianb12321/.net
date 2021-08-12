@@ -15,8 +15,6 @@ using MTDataAccess.Models;
 
 public partial class artistDetails : System.Web.UI.Page
 {
-    public List<Album> Albums { get; set; }
-    public List<Song> DisplayedSongs { get; set; }
     public string ArtistName { get; set; }
     protected void Page_Load(object sender, EventArgs e)
     {

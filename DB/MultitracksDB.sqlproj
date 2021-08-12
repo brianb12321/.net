@@ -76,6 +76,8 @@
     <Build Include="Stored Procedures\GetAlbumsByArtistId.sql" />
     <Build Include="Stored Procedures\GetSongsByArtistId.sql" />
     <Build Include="Stored Procedures\GetAlbumById.sql" />
+    <Build Include="Stored Procedures\GetSongByArtistId.sql" />
+    <Build Include="Stored Procedures\GetAllSongs.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="Assessment.refactorlog" />

@@ -8,10 +8,6 @@ AS
 	FROM Artist
 	WHERE Artist.artistID = @artistId;
 	IF @includeAlbum = 1
-		SELECT *
-		FROM Album
-		WHERE Album.artistID = @artistId;
+		EXEC dbo.GetAlbumsByArtistId @artistId
 	IF @includeSong = 1
-		SELECT *
-		FROM Song
-		WHERE SOng.artistID = @artistId;
+		EXEC dbo.GetSongByArtistId @artistId

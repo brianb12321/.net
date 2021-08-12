@@ -45,7 +45,7 @@ namespace MTDataAccess
                 List<Song> songs = new List<Song>(songTable.RowCount());
                 foreach (DataRow songRow in songTable.Rows)
                 {
-                    songs.Add(populateSongFromDataRow(songRow, false, albumTable, artistTable));
+                    songs.Add(populateSong(key => songRow[key], false, albumTable, artistTable));
                 }
                 artist.Albums = albums.ToArray();
                 artist.Songs = songs.ToArray();
@@ -103,7 +103,7 @@ namespace MTDataAccess
             }
         }
 
-        public Artist AddArtist(Artist artist, bool lazy = false)
+        public Artist AddArtist(Artist artist)
         {
             if (artist == null)
                 throw new ArgumentException("You must supply an artist model.", nameof(artist));
@@ -123,7 +123,7 @@ namespace MTDataAccess
 
             if (row.Rows.Count > 0)
             {
-                result = populateArtistFromDataRow(row.Rows[0], lazy);
+                result = populateArtistFromDataRow(row.Rows[0], true);
             }
             row.Dispose();
             sql.Commit();
@@ -168,24 +168,24 @@ namespace MTDataAccess
             }
         }
 
-        public Song populateSongFromDataRow(DataRow row, bool lazy = false, DataTable albumTable = null, DataTable artistTable = null, DataTable songTable = null)
+        public Song populateSong(Func<string, object> rowSelector, bool lazy = false, DataTable albumTable = null, DataTable artistTable = null, DataTable songTable = null)
         {
             Song song = new Song()
             {
-                SongId = (int) row["songId"],
-                Bpm = (decimal) row["bpm"],
-                Title = row["title"].ToString(),
-                DateCreation = (DateTime) row["dateCreation"],
-                TimeSignature = row["timeSignature"].ToString(),
-                Chart = (bool) row["chart"],
-                MultiTracks = (bool) row["multitracks"],
-                CustomMix = (bool) row["customMix"],
-                RehearsalMix = (bool) row["rehearsalMix"],
-                Patches = (bool) row["patches"],
-                SongSpecificPatches = (bool) row["songSpecificPatches"],
-                ProPresenter = (bool) row["proPresenter"],
-                AlbumId = (int)row["albumID"],
-                ArtistId = (int)row["artistID"]
+                SongId = (int) rowSelector("songId"),
+                Bpm = (decimal) rowSelector("bpm"),
+                Title = rowSelector("title").ToString(),
+                DateCreation = (DateTime) rowSelector("dateCreation"),
+                TimeSignature = rowSelector("timeSignature").ToString(),
+                Chart = (bool) rowSelector("chart"),
+                MultiTracks = (bool) rowSelector("multitracks"),
+                CustomMix = (bool) rowSelector("customMix"),
+                RehearsalMix = (bool) rowSelector("rehearsalMix"),
+                Patches = (bool) rowSelector("patches"),
+                SongSpecificPatches = (bool) rowSelector("songSpecificPatches"),
+                ProPresenter = (bool) rowSelector("proPresenter"),
+                AlbumId = (int)rowSelector("albumID"),
+                ArtistId = (int)rowSelector("artistID")
             };
             if (!lazy)
             {
@@ -194,6 +194,7 @@ namespace MTDataAccess
                     if ((int) albumRow["albumID"] == song.AlbumId)
                     {
                         song.Album = populateAlbumFromDataRow(albumRow);
+                        break;
                     }
                 }
                 song.Artist = populateArtistFromDataRow(artistTable.Rows[0], true, albumTable, songTable);
@@ -201,6 +202,24 @@ namespace MTDataAccess
 
             return song;
         }
+
+        public IEnumerable<Song> GetAllSongs(uint pageNumber = 1, uint pageSize = uint.MaxValue)
+        {
+            sql.Parameters.Add(new SqlParameter("@pageSize", SqlDbType.Int) {Value = pageSize});
+            sql.Parameters.Add(new SqlParameter("@pageNumber", SqlDbType.Int) {Value = pageNumber});
+            //Load rows dynamically
+            using (SqlDataReader reader = sql.ExecuteStoredProcedureDataReader("GetAllSongs", true))
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        yield return populateSong(key => reader[key], true);
+                    }
+                }
+            };
+        }
+
         public Song GetSongById(int songId)
         {
             throw new NotImplementedException();
@@ -220,9 +239,9 @@ namespace MTDataAccess
                 {
                     if (!lazy)
                     {
-                        yield return populateSongFromDataRow(row, lazy, set.Tables[2], set.Tables[1], set.Tables[0]);
+                        yield return populateSong(key => row[key], false, set.Tables[2], set.Tables[1], set.Tables[0]);
                     }
-                    yield return populateSongFromDataRow(row, lazy);
+                    yield return populateSong(key => row[key], lazy);
                 }
             }
         }

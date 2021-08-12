@@ -9,7 +9,7 @@ using MTDataAccess.Models;
 namespace api.multitracks.com.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("artist")]
     public class ArtistController : ControllerBase
     {
         private readonly IDataAccess _dataAccess;
@@ -19,6 +19,7 @@ namespace api.multitracks.com.Controllers
             _dataAccess = dataAccess;
         }
         [HttpGet]
+        [Route("search")]
         public IActionResult Search(string artistName)
         {
             //Validation checks
@@ -32,6 +33,7 @@ namespace api.multitracks.com.Controllers
         }
 
         [HttpPost]
+        [Route("add")]
         public IActionResult Add(Artist artist)
         {
             //Validation
