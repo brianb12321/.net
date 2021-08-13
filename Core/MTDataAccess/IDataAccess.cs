@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using MTDataAccess.Models;
 
 namespace MTDataAccess
@@ -11,6 +6,7 @@ namespace MTDataAccess
     /// <summary>
     /// Abstracts away data-access and platform dependent logic
     /// </summary>
+    //TODO: Segregate entities into separate repositories
     public interface IDataAccess
     {
         //Can be yielded

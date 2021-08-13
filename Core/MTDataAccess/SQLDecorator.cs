@@ -2,10 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using DataAccess;
 using MTDataAccess.Models;
 
@@ -23,23 +19,23 @@ namespace MTDataAccess
             this.sql = sql;
         }
 
-        private Artist populateArtistFromDataRow(DataRow row, bool lazy, DataTable albumTable = null, DataTable songTable = null, DataTable artistTable = null)
+        private Artist populateArtist(Func<string, object> rowSelector, bool lazy, DataTable albumTable = null, DataTable songTable = null, DataTable artistTable = null)
         {
             Artist artist = new Artist()
             {
-                ArtistId = (int)row["artistID"],
-                Biography = row["biography"].ToString(),
-                DateCreation = (DateTime)row["dateCreation"],
-                HeroUrl = new Uri(row["heroURL"].ToString()),
-                ImageUrl = new Uri(row["ImageURL"].ToString()),
-                Title = row["title"].ToString()
+                ArtistId = (int)rowSelector("artistID"),
+                Biography = rowSelector("biography").ToString(),
+                DateCreation = (DateTime)rowSelector("dateCreation"),
+                HeroUrl = new Uri(rowSelector("heroURL").ToString()),
+                ImageUrl = new Uri(rowSelector("ImageURL").ToString()),
+                Title = rowSelector("title").ToString()
             };
             if (!lazy)
             {
                 List<Album> albums = new List<Album>(albumTable.RowCount());
                 foreach (DataRow albumRow in albumTable.Rows)
                 {
-                    albums.Add(populateAlbumFromDataRow(albumRow));
+                    albums.Add(populateAlbum(value => albumRow[value]));
                 }
 
                 List<Song> songs = new List<Song>(songTable.RowCount());
@@ -60,7 +56,7 @@ namespace MTDataAccess
             {
                 foreach (DataRow row in table.Rows)
                 {
-                    yield return populateArtistFromDataRow(row, false);
+                    yield return populateArtist(value => row[value], false);
                 }
             }
         }
@@ -80,9 +76,9 @@ namespace MTDataAccess
                 {
                     if (!lazy)
                     {
-                        return populateArtistFromDataRow(set.Tables[0].Rows[0], false, set.Tables[1], set.Tables[2], set.Tables[0]);
+                        return populateArtist(value => set.Tables[0].Rows[0][value], false, set.Tables[1], set.Tables[2], set.Tables[0]);
                     }
-                    return populateArtistFromDataRow(set.Tables[0].Rows[0], true);
+                    return populateArtist(value => set.Tables[0].Rows[0][value], true);
                 }
             }
             return null;
@@ -98,7 +94,7 @@ namespace MTDataAccess
             {
                 foreach (DataRow row in table.Rows)
                 {
-                    yield return populateArtistFromDataRow(row, true);
+                    yield return populateArtist(value => row[value], true);
                 }
             }
         }
@@ -123,7 +119,7 @@ namespace MTDataAccess
 
             if (row.Rows.Count > 0)
             {
-                result = populateArtistFromDataRow(row.Rows[0], true);
+                result = populateArtist(value => row.Rows[0][value], true);
             }
             row.Dispose();
             sql.Commit();
@@ -131,16 +127,16 @@ namespace MTDataAccess
             return result ?? throw new Exception("Artist could not be returned from server.");
         }
 
-        private Album populateAlbumFromDataRow(DataRow row)
+        private Album populateAlbum(Func<string, object> rowSelector)
         {
             return new Album()
             {
-                AlbumId = (int) row["albumId"],
-                ArtistId = (int) row["artistId"],
-                DateCreation = (DateTime) row["dateCreation"],
-                ImageUrl = new Uri(row["imageURL"].ToString()),
-                Title = row["title"].ToString(),
-                Year = (int) row["year"]
+                AlbumId = (int)rowSelector("albumId"),
+                ArtistId = (int)rowSelector("artistId"),
+                DateCreation = (DateTime)rowSelector("dateCreation"),
+                ImageUrl = new Uri(rowSelector("imageURL").ToString()),
+                Title = rowSelector("title").ToString(),
+                Year = (int)rowSelector("year")
             };
         }
 
@@ -152,7 +148,7 @@ namespace MTDataAccess
                 if (table.Rows.Count == 0)
                     return null;
 
-                return populateAlbumFromDataRow(table.Rows[0]);
+                return populateAlbum(value => table.Rows[0][value]);
             }
         }
 
@@ -163,7 +159,7 @@ namespace MTDataAccess
             {
                 foreach (DataRow row in result.Rows)
                 {
-                    yield return populateAlbumFromDataRow(row);
+                    yield return populateAlbum(value => row[value]);
                 }
             }
         }
@@ -193,11 +189,11 @@ namespace MTDataAccess
                 {
                     if ((int) albumRow["albumID"] == song.AlbumId)
                     {
-                        song.Album = populateAlbumFromDataRow(albumRow);
+                        song.Album = populateAlbum(value => albumRow[value]);
                         break;
                     }
                 }
-                song.Artist = populateArtistFromDataRow(artistTable.Rows[0], true, albumTable, songTable);
+                song.Artist = populateArtist(value => artistTable.Rows[0][value], true, albumTable, songTable);
             }
 
             return song;
